@@ -44,6 +44,10 @@ All endpoints require **Basic Authentication** or **Form-based Login**.
 | `GET` | `/api/transactions/filter` | ANALYST, ADMIN | Filters transactions by type, category, date. |
 | `PUT` | `/api/transactions/{id}` | ADMIN | Updates an existing transaction. |
 | `DELETE` | `/api/transactions/{id}` | ADMIN | Deletes a transaction. |
+| `GET` | `/dashboard/summary` | VIEWER, ANALYST, ADMIN | Dashboard overall totals & net balance. |
+| `GET` | `/dashboard/categories` | VIEWER, ANALYST, ADMIN | Dashboard category breakdown. |
+| `GET` | `/dashboard/recent` | VIEWER, ANALYST, ADMIN | Dashboard recent activity (limit parameter optional). |
+| `GET` | `/dashboard/trends/monthly` | VIEWER, ANALYST, ADMIN | Dashboard monthly income/expense trends. |
 
 ### Request & Response Objects
 
@@ -242,6 +246,40 @@ curl -i http://localhost:8080/dashboard/data
   curl -i -u analyst:analyst123 -X POST http://localhost:8080/api/transactions \
     -H "Content-Type: application/json" \
     -d '{"amount":500.00,"type":"EXPENSE","category":"Food","date":"2026-04-01"}'
+  ```
+
+### 6. Dashboard Summary API
+
+These endpoints are designed for a dashboard UI and are accessible by **Viewer**, **Analyst**, and **Admin**.
+
+- **Get overall summary (income, expenses, net balance, transaction counts):**
+  ```bash
+  curl -u viewer:viewer123 http://localhost:8080/dashboard/summary
+  ```
+
+- **Get totals grouped by category:**
+  ```bash
+  curl -u viewer:viewer123 http://localhost:8080/dashboard/categories
+  ```
+
+- **Get recent transaction activity (default limit is 5):**
+  ```bash
+  curl -u viewer:viewer123 http://localhost:8080/dashboard/recent
+  ```
+
+- **Get recent transaction activity with custom limit:**
+  ```bash
+  curl -u viewer:viewer123 http://localhost:8080/dashboard/recent?limit=10
+  ```
+
+- **Get monthly trends (default is last 6 months):**
+  ```bash
+  curl -u viewer:viewer123 http://localhost:8080/dashboard/trends/monthly
+  ```
+
+- **Get monthly trends for a specific date range:**
+  ```bash
+  curl -u viewer:viewer123 "http://localhost:8080/dashboard/trends/monthly?startDate=2025-01-01&endDate=2026-12-31"
   ```
 
 ---

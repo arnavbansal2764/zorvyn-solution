@@ -51,7 +51,8 @@ public class TransactionController {
 
     /**
      * GET /api/transactions/filter
-     * Filter transactions by optional query parameters: type, category, startDate, endDate.
+     * Filter transactions by optional query parameters: type, category, startDate,
+     * endDate.
      * Analyst and Admin.
      */
     @GetMapping("/filter")
@@ -59,8 +60,7 @@ public class TransactionController {
             @RequestParam(required = false) TransactionType type,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
-    ) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         return ResponseEntity.ok(transactionService.filter(type, category, startDate, endDate));
     }
 
@@ -70,7 +70,7 @@ public class TransactionController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<TransactionResponse> update(@PathVariable Long id,
-                                                      @RequestBody TransactionRequest request) {
+            @RequestBody TransactionRequest request) {
         return ResponseEntity.ok(transactionService.update(id, request));
     }
 
