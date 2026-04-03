@@ -25,6 +25,11 @@ public class SecurityConfig {
                 .requestMatchers("/api/records/view").hasAnyRole("ANALYST", "ADMIN")
                 .requestMatchers("/api/records/**").hasRole("ADMIN")
                 .requestMatchers("/api/manage/**").hasRole("ADMIN")
+                // Transactions: read (GET) for Analyst+Admin, write for Admin only
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/transactions/**").hasAnyRole("ANALYST", "ADMIN")
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/transactions/**").hasRole("ADMIN")
+                .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/transactions/**").hasRole("ADMIN")
+                .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/transactions/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
             .formLogin(withDefaults())

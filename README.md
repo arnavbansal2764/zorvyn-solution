@@ -38,6 +38,12 @@ All endpoints require **Basic Authentication** or **Form-based Login**.
 | `POST` | `/api/records/create` | ADMIN | Creates a new record in the system. |
 | `PUT` | `/api/records/update` | ADMIN | Updates an existing record. |
 | `DELETE` | `/api/records/delete` | ADMIN | Removes a record from the database. |
+| `POST` | `/api/transactions` | ADMIN | Creates a new financial transaction. |
+| `GET` | `/api/transactions` | ANALYST, ADMIN | Retrieves all financial transactions. |
+| `GET` | `/api/transactions/{id}` | ANALYST, ADMIN | Retrieves a single transaction by ID. |
+| `GET` | `/api/transactions/filter` | ANALYST, ADMIN | Filters transactions by type, category, date. |
+| `PUT` | `/api/transactions/{id}` | ADMIN | Updates an existing transaction. |
+| `DELETE` | `/api/transactions/{id}` | ADMIN | Deletes a transaction. |
 
 ### Request & Response Objects
 
@@ -61,6 +67,87 @@ All endpoints require **Basic Authentication** or **Form-based Login**.
 - **Response**: `200 OK`
   - **Body**: `String` (e.g., "Record Created: Admin only.")
 - **Error**: `403 Forbidden` (if accessed by Viewer or Analyst)
+
+---
+
+### 4. Transactions API
+
+All transaction endpoints are under `/api/transactions` and require authentication.
+
+#### 4.1 Create Transaction
+- **URL**: `POST /api/transactions`
+- **Access**: Admin
+- **Request Body**:
+  ```json
+  {
+    "amount": 1500.00,
+    "type": "INCOME",
+    "category": "Salary",
+    "date": "2026-04-01",
+    "notes": "Monthly salary credit"
+  }
+  ```
+- **Response**: `201 Created`
+  ```json
+  {
+    "id": 1,
+    "amount": 1500.00,
+    "type": "INCOME",
+    "category": "Salary",
+    "date": "2026-04-01",
+    "notes": "Monthly salary credit"
+  }
+  ```
+
+#### 4.2 Get All Transactions
+- **URL**: `GET /api/transactions`
+- **Access**: Analyst, Admin
+- **Response**: `200 OK` — Array of transaction objects.
+
+#### 4.3 Get Transaction by ID
+- **URL**: `GET /api/transactions/{id}`
+- **Access**: Analyst, Admin
+- **Response**: `200 OK` — Single transaction object.
+- **Error**: `500` if ID not found.
+
+#### 4.4 Filter Transactions
+- **URL**: `GET /api/transactions/filter`
+- **Access**: Analyst, Admin
+- **Query Parameters** (all optional, can be combined):
+  | Parameter | Type | Example |
+  | :--- | :--- | :--- |
+  | `type` | `INCOME` or `EXPENSE` | `type=INCOME` |
+  | `category` | String | `category=Salary` |
+  | `startDate` | ISO date | `startDate=2026-01-01` |
+  | `endDate` | ISO date | `endDate=2026-03-31` |
+- **Response**: `200 OK` — Filtered array of transaction objects.
+
+#### 4.5 Update Transaction
+- **URL**: `PUT /api/transactions/{id}`
+- **Access**: Admin
+- **Request Body** (all fields optional — only provided fields are updated):
+  ```json
+  {
+    "amount": 2000.00,
+    "notes": "Updated salary amount"
+  }
+  ```
+- **Response**: `200 OK` — Updated transaction object.
+
+#### 4.6 Delete Transaction
+- **URL**: `DELETE /api/transactions/{id}`
+- **Access**: Admin
+- **Response**: `204 No Content`
+
+#### Transaction Field Reference
+
+| Field | Type | Required | Description |
+| :--- | :--- | :---: | :--- |
+| `amount` | `BigDecimal` | ✅ | Monetary value (e.g., `1500.00`) |
+| `type` | `INCOME` \| `EXPENSE` | ✅ | Transaction type |
+| `category` | `String` | ✅ | Category label (e.g., `Salary`, `Rent`) |
+| `date` | `LocalDate` (ISO) | ❌ | Defaults to today if omitted |
+| `notes` | `String` | ❌ | Optional description or memo |
 
 ---
 
@@ -97,6 +184,64 @@ curl -i http://localhost:8080/dashboard/data
 - **Manage Records (Success):**
   ```bash
   curl -u admin:admin123 -X POST http://localhost:8080/api/records/create
+  ```
+
+### 5. Transactions API
+
+- **Create a transaction (Admin):**
+  ```bash
+  curl -u admin:admin123 -X POST http://localhost:8080/api/transactions \
+    -H "Content-Type: application/json" \
+    -d '{"amount":1500.00,"type":"INCOME","category":"Salary","date":"2026-04-01","notes":"Monthly salary"}'
+  ```
+
+- **Get all transactions (Analyst):**
+  ```bash
+  curl -u analyst:analyst123 http://localhost:8080/api/transactions
+  ```
+
+- **Get transaction by ID (Analyst):**
+  ```bash
+  curl -u analyst:analyst123 http://localhost:8080/api/transactions/1
+  ```
+
+- **Filter by type:**
+  ```bash
+  curl -u analyst:analyst123 "http://localhost:8080/api/transactions/filter?type=INCOME"
+  ```
+
+- **Filter by category:**
+  ```bash
+  curl -u analyst:analyst123 "http://localhost:8080/api/transactions/filter?category=Salary"
+  ```
+
+- **Filter by date range:**
+  ```bash
+  curl -u analyst:analyst123 "http://localhost:8080/api/transactions/filter?startDate=2026-01-01&endDate=2026-03-31"
+  ```
+
+- **Filter by all criteria combined:**
+  ```bash
+  curl -u analyst:analyst123 "http://localhost:8080/api/transactions/filter?type=INCOME&category=Salary&startDate=2026-01-01&endDate=2026-04-30"
+  ```
+
+- **Update a transaction (Admin):**
+  ```bash
+  curl -u admin:admin123 -X PUT http://localhost:8080/api/transactions/1 \
+    -H "Content-Type: application/json" \
+    -d '{"amount":2000.00,"notes":"Updated salary"}'
+  ```
+
+- **Delete a transaction (Admin):**
+  ```bash
+  curl -u admin:admin123 -X DELETE http://localhost:8080/api/transactions/1
+  ```
+
+- **Analyst attempting to create (Expected: 403 Forbidden):**
+  ```bash
+  curl -i -u analyst:analyst123 -X POST http://localhost:8080/api/transactions \
+    -H "Content-Type: application/json" \
+    -d '{"amount":500.00,"type":"EXPENSE","category":"Food","date":"2026-04-01"}'
   ```
 
 ---
