@@ -6,8 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -16,18 +14,16 @@ import java.time.LocalDate;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TransactionRequest {
+public class TransactionUpdateRequest {
 
-    @NotNull(message = "Amount must not be null")
     @PositiveOrZero(message = "Amount must be zero or positive")
     private BigDecimal amount;
     
-    @NotNull(message = "Transaction type must be provided")
     private TransactionType type;
     
-    @NotBlank(message = "Category must not be blank")
     private String category;
     
     private LocalDate date;
+    
     private String notes;
 }

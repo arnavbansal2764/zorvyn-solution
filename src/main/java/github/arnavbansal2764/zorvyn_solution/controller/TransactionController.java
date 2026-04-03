@@ -2,6 +2,7 @@ package github.arnavbansal2764.zorvyn_solution.controller;
 
 import github.arnavbansal2764.zorvyn_solution.dto.TransactionRequest;
 import github.arnavbansal2764.zorvyn_solution.dto.TransactionResponse;
+import github.arnavbansal2764.zorvyn_solution.dto.TransactionUpdateRequest;
 import github.arnavbansal2764.zorvyn_solution.model.TransactionType;
 import github.arnavbansal2764.zorvyn_solution.service.TransactionService;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -9,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -27,7 +29,7 @@ public class TransactionController {
      * Create a new transaction. Admin only.
      */
     @PostMapping
-    public ResponseEntity<TransactionResponse> create(@RequestBody TransactionRequest request) {
+    public ResponseEntity<TransactionResponse> create(@Valid @RequestBody TransactionRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(transactionService.create(request));
     }
 
@@ -70,7 +72,7 @@ public class TransactionController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<TransactionResponse> update(@PathVariable Long id,
-            @RequestBody TransactionRequest request) {
+            @Valid @RequestBody TransactionUpdateRequest request) {
         return ResponseEntity.ok(transactionService.update(id, request));
     }
 

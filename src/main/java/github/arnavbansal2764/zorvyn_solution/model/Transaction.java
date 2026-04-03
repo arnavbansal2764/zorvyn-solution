@@ -14,7 +14,11 @@ import java.time.LocalDate;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "transactions")
+@Table(name = "transactions", indexes = {
+    @Index(name = "idx_transaction_type", columnList = "type"),
+    @Index(name = "idx_transaction_category", columnList = "category"),
+    @Index(name = "idx_transaction_date", columnList = "date")
+})
 public class Transaction {
 
     @Id

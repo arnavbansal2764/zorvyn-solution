@@ -2,12 +2,17 @@ package github.arnavbansal2764.zorvyn_solution.service;
 
 import github.arnavbansal2764.zorvyn_solution.dto.TransactionRequest;
 import github.arnavbansal2764.zorvyn_solution.dto.TransactionResponse;
+import github.arnavbansal2764.zorvyn_solution.dto.TransactionUpdateRequest;
 import github.arnavbansal2764.zorvyn_solution.model.Transaction;
 import github.arnavbansal2764.zorvyn_solution.model.TransactionType;
 import github.arnavbansal2764.zorvyn_solution.repository.TransactionRepository;
+import github.arnavbansal2764.zorvyn_solution.exception.ResourceNotFoundException;
+import jakarta.persistence.criteria.Predicate;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -43,7 +48,7 @@ public class TransactionService {
 
     public TransactionResponse getById(Long id) {
         Transaction transaction = transactionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Transaction not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Transaction not found with id: " + id));
         return toResponse(transaction);
     }
 
@@ -51,38 +56,36 @@ public class TransactionService {
 
     public List<TransactionResponse> filter(TransactionType type, String category,
                                             LocalDate startDate, LocalDate endDate) {
-        List<Transaction> results;
+        Specification<Transaction> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
 
-        boolean hasType = type != null;
-        boolean hasCategory = category != null && !category.isBlank();
-        boolean hasDateRange = startDate != null && endDate != null;
+            if (type != null) {
+                predicates.add(cb.equal(root.get("type"), type));
+            }
+            if (category != null && !category.isBlank()) {
+                predicates.add(cb.equal(root.get("category"), category));
+            }
+            if (startDate != null && endDate != null) {
+                predicates.add(cb.between(root.get("date"), startDate, endDate));
+            } else if (startDate != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("date"), startDate));
+            } else if (endDate != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("date"), endDate));
+            }
 
-        if (hasType && hasCategory && hasDateRange) {
-            results = transactionRepository.findByTypeAndCategoryAndDateBetween(type, category, startDate, endDate);
-        } else if (hasType && hasCategory) {
-            results = transactionRepository.findByTypeAndCategory(type, category);
-        } else if (hasType && hasDateRange) {
-            results = transactionRepository.findByTypeAndDateBetween(type, startDate, endDate);
-        } else if (hasCategory && hasDateRange) {
-            results = transactionRepository.findByCategoryAndDateBetween(category, startDate, endDate);
-        } else if (hasType) {
-            results = transactionRepository.findByType(type);
-        } else if (hasCategory) {
-            results = transactionRepository.findByCategory(category);
-        } else if (hasDateRange) {
-            results = transactionRepository.findByDateBetween(startDate, endDate);
-        } else {
-            results = transactionRepository.findAll();
-        }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
 
-        return results.stream().map(this::toResponse).collect(Collectors.toList());
+        return transactionRepository.findAll(spec).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
     }
 
     // ── Update ──────────────────────────────────────────────────────────────────
 
-    public TransactionResponse update(Long id, TransactionRequest request) {
+    public TransactionResponse update(Long id, TransactionUpdateRequest request) {
         Transaction transaction = transactionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Transaction not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Transaction not found with id: " + id));
 
         if (request.getAmount() != null) transaction.setAmount(request.getAmount());
         if (request.getType() != null) transaction.setType(request.getType());
@@ -97,7 +100,7 @@ public class TransactionService {
 
     public void delete(Long id) {
         if (!transactionRepository.existsById(id)) {
-            throw new RuntimeException("Transaction not found with id: " + id);
+            throw new ResourceNotFoundException("Transaction not found with id: " + id);
         }
         transactionRepository.deleteById(id);
     }

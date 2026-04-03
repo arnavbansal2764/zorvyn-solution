@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -82,14 +81,14 @@ public class DashboardService {
         LocalDate start = startDate != null ? startDate : LocalDate.now().minusMonths(6).withDayOfMonth(1);
         LocalDate end = endDate != null ? endDate : LocalDate.now();
 
-        List<Transaction> transactions = transactionRepository.findByDateBetween(start, end);
-
-        // Group by Year-Month
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM");
+        List<Object[]> rawData = transactionRepository.sumGroupedByMonthAndType(start, end);
         Map<String, TrendDataPoint> trendsMap = new TreeMap<>();
 
-        for (Transaction t : transactions) {
-            String period = t.getDate().format(formatter);
+        for (Object[] row : rawData) {
+            String period = (String) row[0];
+            TransactionType type = (TransactionType) row[1];
+            BigDecimal sum = (BigDecimal) row[2];
+            long count = (Long) row[3];
 
             TrendDataPoint point = trendsMap.computeIfAbsent(period,
                     k -> TrendDataPoint.builder()
@@ -100,12 +99,12 @@ public class DashboardService {
                             .transactionCount(0)
                             .build());
 
-            if (t.getType() == TransactionType.INCOME) {
-                point.setTotalIncome(point.getTotalIncome().add(t.getAmount()));
+            if (type == TransactionType.INCOME) {
+                point.setTotalIncome(point.getTotalIncome().add(sum));
             } else {
-                point.setTotalExpenses(point.getTotalExpenses().add(t.getAmount()));
+                point.setTotalExpenses(point.getTotalExpenses().add(sum));
             }
-            point.setTransactionCount(point.getTransactionCount() + 1);
+            point.setTransactionCount(point.getTransactionCount() + (int) count);
             point.setNet(point.getTotalIncome().subtract(point.getTotalExpenses()));
         }
 

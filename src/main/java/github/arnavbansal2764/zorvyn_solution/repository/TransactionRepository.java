@@ -14,16 +14,6 @@ import java.util.List;
 
 public interface TransactionRepository extends JpaRepository<Transaction, Long>, JpaSpecificationExecutor<Transaction> {
 
-    // ── Basic Filters ────────────────────────────────────────────────────────
-
-    List<Transaction> findByType(TransactionType type);
-    List<Transaction> findByCategory(String category);
-    List<Transaction> findByDateBetween(LocalDate startDate, LocalDate endDate);
-    List<Transaction> findByTypeAndCategory(TransactionType type, String category);
-    List<Transaction> findByCategoryAndDateBetween(String category, LocalDate startDate, LocalDate endDate);
-    List<Transaction> findByTypeAndDateBetween(TransactionType type, LocalDate startDate, LocalDate endDate);
-    List<Transaction> findByTypeAndCategoryAndDateBetween(TransactionType type, String category, LocalDate startDate, LocalDate endDate);
-
     // ── Dashboard Aggregations ────────────────────────────────────────────────
 
     /** Total amount for a given transaction type. Returns 0 if no records. */
@@ -42,6 +32,17 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long>,
            "GROUP BY t.category, t.type " +
            "ORDER BY t.category")
     List<Object[]> sumGroupedByCategoryAndType();
+
+    /**
+     * Monthly trend breakdown.
+     * Returns rows of: [period (String, YYYY-MM), type (TransactionType), sum (BigDecimal), count (Long)]
+     */
+    @Query("SELECT FUNCTION('TO_CHAR', t.date, 'YYYY-MM'), t.type, COALESCE(SUM(t.amount), 0), COUNT(t) " +
+           "FROM Transaction t " +
+           "WHERE t.date BETWEEN :startDate AND :endDate " +
+           "GROUP BY FUNCTION('TO_CHAR', t.date, 'YYYY-MM'), t.type " +
+           "ORDER BY FUNCTION('TO_CHAR', t.date, 'YYYY-MM')")
+    List<Object[]> sumGroupedByMonthAndType(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
     /** Most recent N transactions ordered by date then id descending. */
     @Query("SELECT t FROM Transaction t ORDER BY t.date DESC, t.id DESC")
