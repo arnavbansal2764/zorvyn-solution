@@ -22,13 +22,18 @@ On every startup, the `DataInitializer` checks if the database is empty and auto
 - **Analyst**: `analyst` / `analyst123`
 - **Viewer**: `viewer` / `viewer123`
 
-### 5. Data Seeding
-The application provides two ways to populate the database with sample data:
-- **Automatic**: On first run (if database is empty), the `DataInitializer` automatically creates sample incomes and expenses for the last 3 months.
-- **Manual Script**: Run the provided bash script to add more data via the API:
-  ```bash
-  ./seed-data.sh
-  ```
+### 6. Docker Deployment (Recommended)
+You can run the entire stack (App + PostgreSQL) using Docker Compose:
+
+1. **Build and Start**:
+   ```bash
+   docker-compose up --build
+   ```
+2. **Access**: The API will be available at `http://localhost:8080`.
+3. **Stop**:
+   ```bash
+   docker-compose down
+   ```
 
 ---
 
